@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0d3dbb" />
+    <meta name="description" content="A playful interactive question with an Israeli flag backdrop." />
+    <title>Ready to Become Jewish?</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230d3dbb'/%3E%3Cpath d='m32 12 5.6 10.4L49 24.1l-8.5 8.2 2 11.7L32 38.5 21.5 44l2-11.7L15 24.1l11.4-1.7z' fill='none' stroke='white' stroke-width='3'/%3E%3C/svg%3E" />
+    <style>
+      :root {
+        color-scheme: light;
+        --blue: #1648c8;
+        --blue-deep: #0a277c;
+        --blue-soft: #dce9ff;
+        --ink: #0b1634;
+        --muted: #536078;
+        --red: #e34b45;
+        --white: #fffdfb;
+        --line: rgba(22, 72, 200, 0.16);
+      }
+
+      * { box-sizing: border-box; }
+
+      html { min-width: 320px; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        overflow-x: hidden;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: #eef5ff;
+      }
+
+      .flag-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        background:
+          linear-gradient(to bottom, transparent 0 22%, var(--blue) 22% 29%, transparent 29% 71%, var(--blue) 71% 78%, transparent 78%),
+          linear-gradient(135deg, #f8fbff 0%, #dceaff 46%, #f7fbff 100%);
+      }
+
+      .flag-backdrop::after {
+        content: "✡";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: rgba(22, 72, 200, 0.1);
+        font-size: clamp(14rem, 38vw, 34rem);
+        line-height: 1;
+        transform: translateY(2%);
+      }
+
+      .page-shell {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: clamp(1.25rem, 4vw, 3rem);
+      }
+
+      .card {
+        width: min(100%, 1080px);
+        min-height: min(720px, calc(100vh - 3rem));
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.78);
+        border-radius: 32px;
+        background: rgba(255, 253, 251, 0.9);
+        box-shadow: 0 30px 90px rgba(19, 49, 123, 0.2), 0 6px 22px rgba(19, 49, 123, 0.1);
+        backdrop-filter: blur(15px);
+      }
+
+      .content {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 2rem;
+        width: min(100%, 760px);
+        margin: 0 auto;
+        padding: clamp(2rem, 5vw, 4.5rem);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin: 0 0 1.6rem;
+        color: var(--blue);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 2.5rem;
+        height: 0.22rem;
+        border-radius: 999px;
+        background: var(--red);
+      }
+
+      h1 {
+        max-width: 13ch;
+        margin: 0;
+        font-size: clamp(2.7rem, 6vw, 5.8rem);
+        line-height: 0.98;
+        letter-spacing: -0.065em;
+      }
+
+      .intro {
+        max-width: 38rem;
+        margin: 1.6rem 0 0;
+        color: var(--muted);
+        font-size: clamp(1rem, 2vw, 1.15rem);
+        line-height: 1.65;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.8rem;
+        margin-top: 2.2rem;
+      }
+
+      button {
+        min-height: 4rem;
+        padding: 0.9rem 1.2rem;
+        border: 2px solid transparent;
+        border-radius: 16px;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 800;
+        transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, color 160ms ease;
+      }
+
+      button:hover { transform: translateY(-2px); }
+      button:active { transform: translateY(0); }
+      button:focus-visible { outline: 4px solid rgba(227, 75, 69, 0.35); outline-offset: 3px; }
+
+      .yes-button {
+        color: white;
+        background: var(--blue);
+        box-shadow: 0 9px 18px rgba(22, 72, 200, 0.25);
+      }
+
+      .yes-button:hover { background: var(--blue-deep); }
+
+      .no-button {
+        color: var(--blue-deep);
+        border-color: var(--line);
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      .no-button:hover { border-color: rgba(22, 72, 200, 0.42); background: white; }
+
+      .status {
+        min-height: 5.6rem;
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        padding: 1rem 1.1rem;
+        border-radius: 18px;
+        background: var(--blue-soft);
+        color: var(--blue-deep);
+        font-size: clamp(1.05rem, 2vw, 1.35rem);
+        font-weight: 800;
+        line-height: 1.25;
+        transition: background 220ms ease, color 220ms ease;
+      }
+
+      .status::before {
+        content: "✦";
+        display: grid;
+        flex: 0 0 2.3rem;
+        width: 2.3rem;
+        height: 2.3rem;
+        place-items: center;
+        border-radius: 50%;
+        background: white;
+        color: var(--blue);
+        font-size: 1.2rem;
+      }
+
+      .status[data-state="no"] { background: #fff0ef; color: #9b2627; }
+      .status[data-state="no"]::before { content: "!"; color: var(--red); }
+
+      .fine-print {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.82rem;
+        line-height: 1.5;
+      }
+
+      .visual {
+        position: relative;
+        display: grid;
+        min-height: 28rem;
+        place-items: center;
+        padding: 2.4rem 2rem 2rem;
+        background: linear-gradient(145deg, rgba(218, 233, 255, 0.78), rgba(244, 248, 255, 0.94));
+        isolation: isolate;
+      }
+
+      .visual::before,
+      .visual::after {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        border-radius: 50%;
+        border: 1px solid rgba(22, 72, 200, 0.11);
+      }
+
+      .visual::before { width: 23rem; height: 23rem; }
+      .visual::after { width: 29rem; height: 29rem; }
+
+      .portrait-window {
+        position: relative;
+        width: min(100%, 350px);
+        aspect-ratio: 0.77;
+        overflow: hidden;
+        border: 10px solid rgba(255, 255, 255, 0.85);
+        border-radius: 24px;
+        background: #c9e1ff;
+        box-shadow: 0 24px 45px rgba(29, 59, 129, 0.22);
+      }
+
+      .portrait-window img {
+        display: block;
+        height: 100%;
+        width: auto;
+        max-width: none;
+        transform: translateX(0);
+        transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .portrait-window[data-state="no"] img { transform: translateX(-50%); }
+
+      .portrait-label {
+        position: absolute;
+        left: 1rem;
+        bottom: 1rem;
+        padding: 0.6rem 0.75rem;
+        border-radius: 999px;
+        background: rgba(11, 22, 52, 0.82);
+        color: white;
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+      }
+
+      .reset {
+        position: absolute;
+        top: 1.15rem;
+        right: 1.2rem;
+        padding: 0.45rem 0.7rem;
+        border: 0;
+        background: transparent;
+        color: rgba(11, 22, 52, 0.63);
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+
+      .reset:hover { color: var(--blue-deep); }
+
+      [hidden] { display: none !important; }
+
+      .reaction-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        background: #050b1d;
+        color: white;
+      }
+
+      .reaction-screen::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(4, 10, 28, 0.26), rgba(4, 10, 28, 0.68));
+      }
+
+      .reaction-screen--yes video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #050b1d;
+      }
+
+      .reaction-screen--no {
+        background-color: #170307;
+        background-image: url("./assets/netanyahu-reactions.png");
+        background-repeat: no-repeat;
+        background-position: right center;
+        background-size: 200% 100%;
+      }
+
+      .reaction-screen--no::after {
+        background: linear-gradient(180deg, rgba(92, 0, 8, 0.12), rgba(42, 0, 4, 0.72));
+      }
+
+      .reaction-message {
+        position: relative;
+        z-index: 2;
+        max-width: min(92vw, 1000px);
+        margin: 0;
+        padding: 1rem;
+        color: white;
+        font-size: clamp(3rem, 10vw, 10rem);
+        font-weight: 950;
+        line-height: 0.86;
+        letter-spacing: -0.07em;
+        text-align: center;
+        text-shadow: 0 8px 30px rgba(0, 0, 0, 0.46);
+        text-transform: uppercase;
+      }
+
+      .reaction-screen--yes .reaction-message { color: #fff; }
+      .reaction-screen--no .reaction-message { color: #ffdddd; }
+
+      .reaction-close {
+        position: absolute;
+        top: clamp(1rem, 3vw, 2rem);
+        right: clamp(1rem, 3vw, 2rem);
+        z-index: 3;
+        min-height: auto;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 999px;
+        background: rgba(5, 11, 29, 0.52);
+        color: white;
+        font-size: 0.9rem;
+        backdrop-filter: blur(8px);
+      }
+
+      .reaction-close:hover { background: rgba(5, 11, 29, 0.82); }
+
+      @media (max-width: 780px) {
+        .page-shell { padding: 1rem; }
+        .card { grid-template-columns: 1fr; min-height: auto; border-radius: 24px; }
+        .content { padding: 2rem 1.35rem 1.35rem; }
+        h1 { max-width: 10ch; font-size: clamp(2.75rem, 14vw, 4.6rem); }
+        .visual { order: -1; min-height: 23rem; padding: 2.7rem 1rem 1.6rem; }
+        .portrait-window { width: min(72vw, 285px); }
+        .actions { grid-template-columns: 1fr; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.001ms !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="flag-backdrop" aria-hidden="true"></div>
+    <main class="page-shell">
+      <section class="card" aria-labelledby="page-title">
+        <div class="content">
+          <div>
+            <p class="eyebrow">A very important question</p>
+            <h1 id="page-title">Are you ready to become Jewish?</h1>
+            <p class="intro">Your answer will determine whether Benjamin Netanyahu celebrates with you… or gives you the look.</p>
+
+            <div class="actions" aria-label="Choose your answer">
+              <button class="yes-button" type="button" data-answer="yes">Yes, I’m ready</button>
+              <button class="no-button" type="button" data-answer="no">No, not today</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="status" id="status" data-state="idle" role="status" aria-live="polite">Choose an answer to reveal your fate.</div>
+            <p class="fine-print">A playful internet ceremony — no paperwork required.</p>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <section class="reaction-screen reaction-screen--yes" id="yes-screen" role="dialog" aria-modal="true" aria-labelledby="yes-message" hidden>
+      <video id="celebration-video" src="./assets/congratulations.mp4" playsinline controls preload="auto"></video>
+      <h2 class="reaction-message" id="yes-message">Congratulations</h2>
+      <button class="reaction-close" type="button" data-close-reaction>Back to the question</button>
+    </section>
+
+    <section class="reaction-screen reaction-screen--no" id="no-screen" role="dialog" aria-modal="true" aria-labelledby="no-message" hidden>
+      <h2 class="reaction-message" id="no-message">Admin very angry</h2>
+      <button class="reaction-close" type="button" data-close-reaction>Back to the question</button>
+    </section>
+
+    <script>
+      const status = document.querySelector("#status");
+      const yesScreen = document.querySelector("#yes-screen");
+      const noScreen = document.querySelector("#no-screen");
+      const celebrationVideo = document.querySelector("#celebration-video");
+      const closeReactionButtons = document.querySelectorAll("[data-close-reaction]");
+      const buttons = document.querySelectorAll("[data-answer]");
+
+      const states = {
+        yes: {
+          message: "You are now Jewish. Mazel tov! ✡",
+          status: "yes"
+        },
+        no: {
+          message: "No? Netanyahu is not happy about that.",
+          status: "no"
+        }
+      };
+
+      function choose(answer) {
+        const state = states[answer];
+        status.textContent = state.message;
+        status.dataset.state = state.status;
+
+        yesScreen.hidden = answer !== "yes";
+        noScreen.hidden = answer !== "no";
+        document.body.classList.add("is-reaction-open");
+
+        if (answer === "yes") {
+          celebrationVideo.currentTime = 0;
+          celebrationVideo.muted = false;
+          celebrationVideo.play().catch(() => {
+            celebrationVideo.muted = true;
+            celebrationVideo.play();
+          });
+        } else {
+          celebrationVideo.pause();
+        }
+      }
+
+      buttons.forEach((button) => button.addEventListener("click", () => choose(button.dataset.answer)));
+
+      function closeReaction() {
+        celebrationVideo.pause();
+        celebrationVideo.currentTime = 0;
+        yesScreen.hidden = true;
+        noScreen.hidden = true;
+        document.body.classList.remove("is-reaction-open");
+      }
+
+      closeReactionButtons.forEach((button) => button.addEventListener("click", closeReaction));
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !yesScreen.hidden) closeReaction();
+      });
+    </script>
+  </body>
+</html>
